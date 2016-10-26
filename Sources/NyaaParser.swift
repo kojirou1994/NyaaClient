@@ -45,12 +45,8 @@ class NyaaParser {
 			throw NyaaError.htmlParserError
 		}
 		if index == 1 {
-			if let rightpages = document.element(atCSSSelector: "div.rightpages") {
-				let results = rightpages.search(byCSSSelector: "a")
-				if results.count == 2 {
-					let page = results[1]
-					getTotalPage(url: "http:" + (page["href"] ?? ""))
-				}
+			if let link = document.element(atXPath: "//div[@class='rightpages']/a[last()]") {
+					getTotalPage(url: "http:" + (link["href"] ?? ""))
 			}
 			
 		}

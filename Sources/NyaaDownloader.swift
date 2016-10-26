@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import AEXML
 
 class NyaaDownloader: NyaaParserDelegate {
 	
@@ -28,15 +27,15 @@ class NyaaDownloader: NyaaParserDelegate {
 		}
 	}
 	
-	func download(url: String) {
+	func download(url: String, filename: String? = nil) {
 		URLSession.shared.downloadTask(with: URL(string: url)!) { (path, response, error) in
 			guard error == nil, path != nil else {
 				return
 			}
 			do {
-				try FileManager.default.copyItem(at: path!, to: URL.init(fileURLWithPath: self.path + (response?.suggestedFilename)!))
+				try FileManager.default.copyItem(at: path!, to: URL.init(fileURLWithPath: self.path + (filename == nil ? (response?.suggestedFilename)! : filename!)))
 			} catch let error as NSError {
-				print(error.localizedDescription)
+				//print(error.localizedDescription)
 			}
 		}.resume()
 	}
