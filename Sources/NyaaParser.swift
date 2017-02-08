@@ -10,7 +10,9 @@ import Foundation
 import Scrape
 
 enum NyaaError: Error {
+	
 	case networkError
+	
 	case htmlParserError
 }
 
@@ -18,7 +20,7 @@ class NyaaParser {
 	
 	let baseUrl: String
 	
-	var totalPage: Int = 1
+	var pageCount: Int = 1
 	
 	var currentPage: Int = 1
 	
@@ -30,7 +32,7 @@ class NyaaParser {
 	
 	func parse() throws {
 		try parse(index: currentPage)
-		while currentPage < totalPage {
+		while currentPage < pageCount {
 			currentPage += 1
 			try parse(index: currentPage)
 		}
@@ -38,7 +40,7 @@ class NyaaParser {
 	}
 	
 	private func parse(index: Int) throws {
-		guard let data = try? Data.init(contentsOf: URL(string: baseUrl + "&offset=\(index)")!) else {
+		guard let data = try? Data(contentsOf: URL(string: baseUrl + "&offset=\(index)")!) else {
 			throw NyaaError.networkError
 		}
 		guard let document = HTMLDocument.init(html: data, encoding: .utf8) else {
@@ -46,11 +48,10 @@ class NyaaParser {
 		}
 		if index == 1 {
 			if let link = document.element(atXPath: "//div[@class='rightpages']/a[last()]") {
-					getTotalPage(url: "http:" + (link["href"] ?? ""))
+					getPageCount(url: "http:" + (link["href"] ?? ""))
 			}
 			
 		}
-		
 		let results = document.search(byCSSSelector: "td.tlistdownload")
 		let rawlinks = results.map({ $0.element(atCSSSelector: "a")?["href"] ?? "" }).filter({ $0 != "" })
 		let links = rawlinks.map({ (link) -> String in
@@ -63,9 +64,10 @@ class NyaaParser {
 		delegate?.didGet(links: links, inPage: currentPage)
 	}
 	
-	func getTotalPage(url: String) {
-		if let offset = URLComponents(string: url)?.queryItems?.filter({ $0.name == "offset" }).first?.value {
-			totalPage = Int(offset) ?? 1
+	private func getPageCount(url: String) {
+		if let offset = URLComponents(string: url)?.queryItems?.filter({ $0.name == "offset" }).first?.value,
+		   let offsetInt = Int(offset) {
+			pageCount = offsetInt
 		}
 	}
 	
